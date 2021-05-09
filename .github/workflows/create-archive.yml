@@ -9,7 +9,7 @@ jobs:
       uses: thedoctor0/zip-release@master
       with:
         filename: 'pcd-io.zip'
-        exclusions: '*.git* *.py .editorconfig'
+        exclusions: '*.git* *.pyc .editorconfig'
     - name: Upload Release
       uses: ncipollo/release-action@v1
       with:
