@@ -1,5 +1,8 @@
 name: Create Archive
-on: [push]
+on:
+  push:
+    tags:
+      - '*'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -9,7 +12,7 @@ jobs:
       uses: thedoctor0/zip-release@master
       with:
         filename: 'pcd-io.zip'
-        exclusions: '*.git* *.pyc .editorconfig'
+        exclusions: '*.git* *.pyc README.md *media*'
     - name: Upload Release
       uses: ncipollo/release-action@v1
       with:
