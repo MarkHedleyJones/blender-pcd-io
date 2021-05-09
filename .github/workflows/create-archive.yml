@@ -10,3 +10,8 @@ jobs:
       with:
         filename: 'pcd-io.zip'
         exclusions: '*.git* *.py .editorconfig'
+    - name: Upload Release
+        uses: ncipollo/release-action@v1
+        with:
+            artifacts: "pcd-io.zip"
+            token: ${{ secrets.GITHUB_TOKEN }}
