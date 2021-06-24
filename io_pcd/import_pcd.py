@@ -54,7 +54,7 @@ def validated_header(header):
     header = {key: transformers[key](
         header[key]) for key in header}
     assert header['WIDTH'] * header['HEIGHT'] == header['POINTS']
-    assert header['DATA'] in ['binary', 'ascii']
+    assert header['DATA'] in ['binary']
     assert len(header['FIELDS']) == len(header['SIZE'])
     assert len(header['FIELDS']) == len(header['TYPE'])
     assert len(header['FIELDS']) == len(header['COUNT'])
@@ -87,8 +87,8 @@ def get_struct_format_chars(header):
     struct package """
     struct_formats = {
         'I': ['b', 'h', 'l', 'q'],
-        'U': ['B', 'H', 'L', 'Q'],
-        'F': ['x', 'e', 'f', 'd']
+        'U': ['B', 'H', 'I', 'Q'],
+        'F': ['x', 'e', 'f', 'd'],
     }
     struct_formatting = []
     for field_type, field_size in zip(header['TYPE'], header['SIZE']):
@@ -108,7 +108,8 @@ def load_pcd_file(filepath, pcd_name):
         point_bytes = sum(header['SIZE'])
         points = []
         for index in range(header['POINTS']):
-            points += struct.unpack(struct_format_chars, f.read(point_bytes))
+            # keep only x, y, z from each point
+            points += struct.unpack(struct_format_chars, f.read(point_bytes))[:3]
 
     mesh = bpy.data.meshes.new(pcd_name)
     mesh.vertices.add(header['POINTS'])
