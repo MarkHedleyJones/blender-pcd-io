@@ -108,7 +108,8 @@ def load_pcd_file(filepath, pcd_name):
         point_bytes = sum(header['SIZE'])
         points = []
         for index in range(header['POINTS']):
-            points += struct.unpack(struct_format_chars, f.read(point_bytes))
+            # keep only x, y, z from each point
+            points += struct.unpack(struct_format_chars, f.read(point_bytes))[:3]
 
     mesh = bpy.data.meshes.new(pcd_name)
     mesh.vertices.add(header['POINTS'])
