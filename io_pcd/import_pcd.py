@@ -87,8 +87,8 @@ def get_struct_format_chars(header):
     struct package """
     struct_formats = {
         'I': ['b', 'h', 'l', 'q'],
-        'U': ['B', 'H', 'L', 'Q'],
-        'F': ['x', 'e', 'f', 'd']
+        'U': ['B', 'H', 'I', 'Q'],
+        'F': ['x', 'e', 'f', 'd'],
     }
     struct_formatting = []
     for field_type, field_size in zip(header['TYPE'], header['SIZE']):
