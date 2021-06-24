@@ -54,7 +54,7 @@ def validated_header(header):
     header = {key: transformers[key](
         header[key]) for key in header}
     assert header['WIDTH'] * header['HEIGHT'] == header['POINTS']
-    assert header['DATA'] in ['binary', 'ascii']
+    assert header['DATA'] in ['binary']
     assert len(header['FIELDS']) == len(header['SIZE'])
     assert len(header['FIELDS']) == len(header['TYPE'])
     assert len(header['FIELDS']) == len(header['COUNT'])
