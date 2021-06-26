@@ -99,8 +99,7 @@ def get_struct_format_chars(header):
     return ''.join(struct_formatting)
 
 
-def load_pcd_file(filepath, pcd_name):
-    import bpy
+def load_pcd_file(filepath):
     points = []
     with open(filepath, 'rb') as f:
         header = read_header(f)
@@ -110,11 +109,15 @@ def load_pcd_file(filepath, pcd_name):
         for index in range(header['POINTS']):
             # keep only x, y, z from each point
             points += struct.unpack(struct_format_chars, f.read(point_bytes))[:3]
+    return points
 
+
+def convert_points_to_mesh_verticies(points, pcd_name):
+    import bpy
     mesh = bpy.data.meshes.new(pcd_name)
-    mesh.vertices.add(header['POINTS'])
+    mesh.vertices.add(len(points))
     mesh.vertices.foreach_set("co", points)
-    return mesh, header['POINTS']
+    return mesh
 
 
 def import_pcd(context, filepath):
@@ -124,13 +127,14 @@ def import_pcd(context, filepath):
 
     t = time.time()
     pcd_name = bpy.path.display_name_from_filepath(filepath)
-    print(pcd_name)
-    points, num_points = load_pcd_file(filepath, pcd_name)
-    print(num_points)
-    if num_points == 0:
+    points = load_pcd_file(filepath)
+
+    if len(points) == 0:
         return {'CANCELLED'}
 
-    obj = bpy.data.objects.new(pcd_name, points)
+    mesh_verticies = convert_points_to_mesh_verticies(points, pcd_name)
+
+    obj = bpy.data.objects.new(pcd_name, mesh_verticies)
     bpy.context.collection.objects.link(obj)
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
