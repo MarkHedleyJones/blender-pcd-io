@@ -31,7 +31,7 @@ import bpy
 bl_info = {
     "name": "Point Cloud Format (.pcd)",
     "author": "Mark Hedley Jones",
-    "version": (1, 0),
+    "version": (1, 1),
     "blender": (2, 80, 0),
     "location": "File > Import/Export > PCD (.pcd)",
     "description": "Import/Export PCD files",
