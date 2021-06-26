@@ -20,8 +20,9 @@
 
 """ This script is an importer for the .pcd files"""
 
-import struct
 import os
+import struct
+import sys
 
 header = {
     'VERSION': None,
@@ -54,7 +55,7 @@ def validated_header(header):
     header = {key: transformers[key](
         header[key]) for key in header}
     assert header['WIDTH'] * header['HEIGHT'] == header['POINTS']
-    assert header['DATA'] in ['binary']
+    assert header['DATA'] in ['binary', 'binary_compressed']
     assert len(header['FIELDS']) == len(header['SIZE'])
     assert len(header['FIELDS']) == len(header['TYPE'])
     assert len(header['FIELDS']) == len(header['COUNT'])
@@ -99,6 +100,10 @@ def get_struct_format_chars(header):
     return ''.join(struct_formatting)
 
 
+def load_compressed_data(f):
+    import lzf
+    return []
+
 def load_pcd_file(filepath):
     points = []
     with open(filepath, 'rb') as f:
@@ -106,9 +111,33 @@ def load_pcd_file(filepath):
         struct_format_chars = get_struct_format_chars(header)
         point_bytes = sum(header['SIZE'])
         points = []
-        for index in range(header['POINTS']):
-            # keep only x, y, z from each point
-            points += struct.unpack(struct_format_chars, f.read(point_bytes))[:3]
+        if header['DATA'] == 'binary_compressed':
+            try:
+                import lzf
+            except ModuleNotFoundError as e:
+                py_version = sys.version_info
+                return "This PCD file is compressed but the decompressor "\
+                    "library is not installed on your system. Please install "\
+                    f"python-lzf for Python {py_version.major}. "\
+                    "For example, by running: pip install python-lzf"
+
+            print(header)
+            expected_bytes = sum(header['SIZE'] * header['POINTS'])
+            print(f"expecting {expected_bytes} bytes")
+            reader = lzf.RawReader(f)
+            for i in range(1000):
+                try:
+                    print(i)
+                    print(reader.read())
+                except ValueError:
+                    pass
+                # f.read(5)
+            # print(f"data is size {len(data)}")
+            print("I should do somethgin here")
+        else:
+            for index in range(header['POINTS']):
+                # keep only x, y, z from each point
+                points += struct.unpack(struct_format_chars, f.read(point_bytes))[:3]
     return points
 
 
@@ -129,7 +158,9 @@ def import_pcd(context, filepath):
     pcd_name = bpy.path.display_name_from_filepath(filepath)
     points = load_pcd_file(filepath)
 
-    if len(points) == 0:
+    if type(points) == str:
+        return points
+    elif len(points) == 0:
         return {'CANCELLED'}
 
     mesh_verticies = convert_points_to_mesh_verticies(points, pcd_name)
@@ -153,4 +184,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     print(f"Loading file {args.src}...")
     points = load_pcd_file(args.src)
+    if type(points) == str:
+        print(points)
+        exit(1)
     print(f"Loaded {len(points)}.")
