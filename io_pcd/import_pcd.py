@@ -143,3 +143,14 @@ def import_pcd(context, filepath):
           (num_points, filepath, time.time() - t))
 
     return {'FINISHED'}
+
+
+if __name__ == "__main__":
+    # For development
+    import argparse
+    parser = argparse.ArgumentParser(prog="Blender import-pcd")
+    parser.add_argument('src', type=str, help="File to attempt to import")
+    args = parser.parse_args()
+    print(f"Loading file {args.src}...")
+    points = load_pcd_file(args.src)
+    print(f"Loaded {len(points)}.")
