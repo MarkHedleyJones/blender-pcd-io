@@ -120,24 +120,22 @@ def load_pcd_file(filepath):
                     "library is not installed on your system. Please install "\
                     f"python-lzf for Python {py_version.major}. "\
                     "For example, by running: pip install python-lzf"
-
-            print(header)
-            expected_bytes = sum(header['SIZE'] * header['POINTS'])
-            print(f"expecting {expected_bytes} bytes")
-            reader = lzf.RawReader(f)
-            for i in range(1000):
-                try:
-                    print(i)
-                    print(reader.read())
-                except ValueError:
-                    pass
-                # f.read(5)
-            # print(f"data is size {len(data)}")
-            print("I should do somethgin here")
+            # Two unsigned ints at start of data block hold the compressed
+            # and uncompressed size of the point data.
+            len_compressed, len_decompressed = struct.unpack('II', f.read(8))
+            data = lzf.decompress(f.read(len_compressed), len_decompressed)
+            stride = struct.calcsize(struct_format_chars)
+            indicies = range(0, header['POINTS'] * stride, stride)
+            chunks = (data[index:index+stride] for index in indicies)
+            for chunk in chunks:
+                # keep only x, y, z from each point
+                points += struct.unpack(struct_format_chars, chunk)[:3]
+            return points
         else:
             for index in range(header['POINTS']):
                 # keep only x, y, z from each point
-                points += struct.unpack(struct_format_chars, f.read(point_bytes))[:3]
+                points += struct.unpack(struct_format_chars,
+                                        f.read(point_bytes))[:3]
     return points
 
 
@@ -174,17 +172,3 @@ def import_pcd(context, filepath):
           (num_points, filepath, time.time() - t))
 
     return {'FINISHED'}
-
-
-if __name__ == "__main__":
-    # For development
-    import argparse
-    parser = argparse.ArgumentParser(prog="Blender import-pcd")
-    parser.add_argument('src', type=str, help="File to attempt to import")
-    args = parser.parse_args()
-    print(f"Loading file {args.src}...")
-    points = load_pcd_file(args.src)
-    if type(points) == str:
-        print(points)
-        exit(1)
-    print(f"Loaded {len(points)}.")
