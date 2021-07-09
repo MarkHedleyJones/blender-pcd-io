@@ -52,8 +52,7 @@ def validated_header(header):
         'POINTS': lambda x: int(x),
         'DATA': lambda x: str(x),
     }
-    header = {key: transformers[key](
-        header[key]) for key in header}
+    header = {key: transformers[key](header[key]) for key in header}
     assert header['WIDTH'] * header['HEIGHT'] == header['POINTS']
     assert header['DATA'] in ['binary', 'binary_compressed']
     assert len(header['FIELDS']) == len(header['SIZE'])
@@ -84,8 +83,8 @@ def read_header(file_descriptor):
 
 
 def get_struct_format_chars(header):
-    """ Convert the field types/sizes into format specifiers for the
-    struct package """
+    """Convert the field types/sizes into format specifiers for the
+    struct package"""
     struct_formats = {
         'I': ['b', 'h', 'l', 'q'],
         'U': ['B', 'H', 'I', 'Q'],
@@ -93,7 +92,7 @@ def get_struct_format_chars(header):
     }
     struct_formatting = []
     for field_type, field_size in zip(header['TYPE'], header['SIZE']):
-        field_size_index = int(field_size**0.5)
+        field_size_index = int(field_size ** 0.5)
         struct_formatting.append(struct_formats[field_type][field_size_index])
     # Check that a 1 byte float hasn't been specified!
     assert 'x' not in struct_formatting
@@ -102,13 +101,15 @@ def get_struct_format_chars(header):
 
 def load_compressed_data(f):
     import lzf
+
     return []
+
 
 def load_pcd_file(filepath):
     points = []
     with open(filepath, 'rb') as f:
         header = read_header(f)
-        struct_format_chars = get_struct_format_chars(header)
+        struct_format = get_struct_format_chars(header)
         point_bytes = sum(header['SIZE'])
         points = []
         if header['DATA'] == 'binary_compressed':
@@ -116,31 +117,33 @@ def load_pcd_file(filepath):
                 import lzf
             except ModuleNotFoundError as e:
                 py_version = sys.version_info
-                return "This PCD file is compressed but the decompressor "\
-                    "library is not installed on your system. Please install "\
-                    f"python-lzf for Python {py_version.major}. "\
+                return (
+                    "This PCD file is compressed but the decompressor "
+                    "library is not installed on your system. Please install "
+                    f"python-lzf for Python {py_version.major}. "
                     "For example, by running: pip install python-lzf"
+                )
             # Two unsigned ints at start of data block hold the compressed
             # and uncompressed size of the point data.
             len_compressed, len_decompressed = struct.unpack('II', f.read(8))
             data = lzf.decompress(f.read(len_compressed), len_decompressed)
-            stride = struct.calcsize(struct_format_chars)
+            stride = struct.calcsize(struct_format)
             indicies = range(0, header['POINTS'] * stride, stride)
-            chunks = (data[index:index+stride] for index in indicies)
+            chunks = (data[index : index + stride] for index in indicies)
             for chunk in chunks:
                 # keep only x, y, z from each point
-                points += struct.unpack(struct_format_chars, chunk)[:3]
+                points += struct.unpack(struct_format, chunk)[:3]
             return points
         else:
             for index in range(header['POINTS']):
                 # keep only x, y, z from each point
-                points += struct.unpack(struct_format_chars,
-                                        f.read(point_bytes))[:3]
+                points += struct.unpack(struct_format, f.read(point_bytes))[:3]
     return points
 
 
 def convert_points_to_mesh_verticies(points, pcd_name):
     import bpy
+
     mesh = bpy.data.meshes.new(pcd_name)
     mesh.vertices.add(len(points))
     mesh.vertices.foreach_set("co", points)
@@ -168,7 +171,9 @@ def import_pcd(context, filepath):
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
 
-    print("\nSuccessfully imported %d points from %r in %.3f sec" %
-          (num_points, filepath, time.time() - t))
+    print(
+        "\nSuccessfully imported %d points from %r in %.3f sec"
+        % (num_points, filepath, time.time() - t)
+    )
 
     return {'FINISHED'}
