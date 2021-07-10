@@ -138,7 +138,7 @@ def load_pcd_file(filepath):
                 chunk_start = field_idx * blk_fmt_num_bytes
                 chunk_end = chunk_start + blk_fmt_num_bytes
                 unzipped.append(struct.unpack(blk_fmt, data[chunk_start:chunk_end]))
-            return {'points': zip(*unzipped), 'fields': header['FIELDS']}
+            return {'points': list(zip(*unzipped)), 'fields': header['FIELDS']}
         else:
             return {
                 'points': [
