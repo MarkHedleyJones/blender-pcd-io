@@ -34,44 +34,35 @@ class Point(object):
 
 
 def pcd_data_to_points(data):
-    stride = 3  # Should only have x, y, z fields
-    assert len(data) % stride == 0
-    num_points = int(len(data) / stride)
-    indicies = range(0, num_points * stride, stride)
-    chunks = (data[index : index + stride] for index in indicies)
-    return map(lambda x: Point(*x), chunks)
+    # Strip out any additional fields and convert to Point objects
+    return [Point(*x[0:3]) for x in data['points']]
 
 
 def get_expected_points():
     return [
-        Point(-1, -1, -1),
-        Point(-1, -1, 1),
-        Point(-1, 1, -1),
-        Point(-1, 1, 1),
-        Point(1, -1, -1),
-        Point(1, -1, 1),
-        Point(1, 1, -1),
-        Point(1, 1, 1),
+        Point(-2.0, -2.0, -2.0),
+        Point(-1.0, -1.0, -1.0),
+        Point(0.0, 0.0, 0.0),
+        Point(1.0, 1.0, 1.0),
+        Point(2.0, 2.0, 2.0),
     ]
 
 
 def test_xyz_binary():
     path_pcd = os.path.join(path_pointclouds, 'xyz_binary.pcd')
-    pcd = import_pcd.load_pcd_file(path_pcd)
-    points = sorted(pcd_data_to_points(pcd))
+    pcd_data = import_pcd.load_pcd_file(path_pcd)
+    points = pcd_data_to_points(pcd_data)
     expected_points = get_expected_points()
     assert len(expected_points) == len(points)
     for index in range(len(points)):
-        print(index, points[index], expected_points[index])
         assert points[index] == expected_points[index]
 
 
 def test_xyz_binary_compressed():
     path_pcd = os.path.join(path_pointclouds, 'xyz_binary_compressed.pcd')
-    pcd = import_pcd.load_pcd_file(path_pcd)
-    points = sorted(pcd_data_to_points(pcd))
+    pcd_data = import_pcd.load_pcd_file(path_pcd)
+    points = pcd_data_to_points(pcd_data)
     expected_points = get_expected_points()
     assert len(expected_points) == len(points)
     for index in range(len(points)):
-        print(index, points[index], expected_points[index])
         assert points[index] == expected_points[index]
