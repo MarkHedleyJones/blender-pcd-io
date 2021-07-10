@@ -106,7 +106,6 @@ def load_compressed_data(f):
 
 
 def load_pcd_file(filepath):
-    points = []
     with open(filepath, 'rb') as f:
         header = read_header(f)
         struct_format = get_struct_format_chars(header)
@@ -126,19 +125,26 @@ def load_pcd_file(filepath):
             # Two unsigned ints at start of data block hold the compressed
             # and uncompressed size of the point data.
             len_compressed, len_decompressed = struct.unpack('II', f.read(8))
+            # Data is [x0, x1, x2, y0, y1, y2, z0, z1, z2, ...]
             data = lzf.decompress(f.read(len_compressed), len_decompressed)
-            stride = struct.calcsize(struct_format)
-            indicies = range(0, header['POINTS'] * stride, stride)
-            chunks = (data[index : index + stride] for index in indicies)
-            for chunk in chunks:
-                # keep only x, y, z from each point
-                points += struct.unpack(struct_format, chunk)[:3]
-            return points
+            split_data = []
+            for field_idx in range(len(header['FIELDS'])):
+                blk_fmt = ''.join(
+                    struct_format[field_idx] for x in range(header['POINTS'])
+                )
+                blk_fmt_num_bytes = struct.calcsize(blk_fmt)
+                chunk_start = field_idx * blk_fmt_num_bytes
+                chunk_end = chunk_start + blk_fmt_num_bytes
+                split_data.append(struct.unpack(blk_fmt, data[chunk_start:chunk_end]))
+            return {'points': zip(*split_data), 'fields': header['FIELDS']}
         else:
-            for index in range(header['POINTS']):
-                # keep only x, y, z from each point
-                points += struct.unpack(struct_format, f.read(point_bytes))[:3]
-    return points
+            return {
+                'points': [
+                    (struct.unpack(struct_format, f.read(point_bytes)))
+                    for x in range(header['POINTS'])
+                ],
+                'fields': header['FIELDS'],
+            }
 
 
 def convert_points_to_mesh_verticies(points, pcd_name):
