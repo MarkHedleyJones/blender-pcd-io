@@ -23,6 +23,7 @@
 import os
 import struct
 import sys
+import time
 
 header = {
     'VERSION': None,
@@ -99,13 +100,9 @@ def get_struct_format_chars(header):
     return ''.join(struct_formatting)
 
 
-def load_compressed_data(f):
-    import lzf
-
-    return []
-
-
 def load_pcd_file(filepath):
+    """Load the file and return a dictionary like:
+    {"points": [(1.0, 1.0, 1.0), ...], "fields": ['x', 'y', 'z']}"""
     with open(filepath, 'rb') as f:
         header = read_header(f)
         struct_format = get_struct_format_chars(header)
@@ -122,21 +119,26 @@ def load_pcd_file(filepath):
                     f"python-lzf for Python {py_version.major}. "
                     "For example, by running: pip install python-lzf"
                 )
-            # Two unsigned ints at start of data block hold the compressed
-            # and uncompressed size of the point data.
+            # Two unsigned-ints at beginning of data block hold the sizes
+            # (in bytes) of the compressed and uncompressed point data.
             len_compressed, len_decompressed = struct.unpack('II', f.read(8))
-            # Data is [x0, x1, x2, y0, y1, y2, z0, z1, z2, ...]
+            # Data is organised as: [x0, x1, x2, y0, y1, y2, z0, z1, z2, ...]
             data = lzf.decompress(f.read(len_compressed), len_decompressed)
-            split_data = []
+            # Unzipped will be organised like so (convenient for zipping):
+            # [[x0, x1, x2, ...], [y0, y1, y2, ...], [z0, z1, z2, ...], ...]
+            unzipped = []
             for field_idx in range(len(header['FIELDS'])):
+                # E.g if points are float type (f) and there are 5 points in total
+                # then the 'x' field block_format will be: 'fffff'
                 blk_fmt = ''.join(
                     struct_format[field_idx] for x in range(header['POINTS'])
                 )
+                # Figure out how big this block would be in bytes
                 blk_fmt_num_bytes = struct.calcsize(blk_fmt)
                 chunk_start = field_idx * blk_fmt_num_bytes
                 chunk_end = chunk_start + blk_fmt_num_bytes
-                split_data.append(struct.unpack(blk_fmt, data[chunk_start:chunk_end]))
-            return {'points': zip(*split_data), 'fields': header['FIELDS']}
+                unzipped.append(struct.unpack(blk_fmt, data[chunk_start:chunk_end]))
+            return {'points': zip(*unzipped), 'fields': header['FIELDS']}
         else:
             return {
                 'points': [
@@ -147,30 +149,30 @@ def load_pcd_file(filepath):
             }
 
 
-def convert_points_to_mesh_verticies(points, pcd_name):
-    import bpy
+def convert_points_to_mesh_verticies(pcd_data, pcd_name):
+    import bpy, itertools
 
     mesh = bpy.data.meshes.new(pcd_name)
-    mesh.vertices.add(len(points))
+    mesh.vertices.add(len(pcd_data['points']))
+    points = list(itertools.chain(*[list(pt[:3]) for pt in pcd_data['points']]))
     mesh.vertices.foreach_set("co", points)
+    # Maybe we can store extra fileds in this object somehow?
     return mesh
 
 
 def import_pcd(context, filepath):
-
-    import time
     import bpy
 
     t = time.time()
     pcd_name = bpy.path.display_name_from_filepath(filepath)
-    points = load_pcd_file(filepath)
+    pcd_data = load_pcd_file(filepath)
 
-    if type(points) == str:
-        return points
-    elif len(points) == 0:
-        return {'CANCELLED'}
+    if type(pcd_data) == str:
+        return pcd_data
+    elif len(pcd_data['points']) == 0:
+        return "Point cloud contains no points"
 
-    mesh_verticies = convert_points_to_mesh_verticies(points, pcd_name)
+    mesh_verticies = convert_points_to_mesh_verticies(pcd_data, pcd_name)
 
     obj = bpy.data.objects.new(pcd_name, mesh_verticies)
     bpy.context.collection.objects.link(obj)
@@ -179,7 +181,7 @@ def import_pcd(context, filepath):
 
     print(
         "\nSuccessfully imported %d points from %r in %.3f sec"
-        % (num_points, filepath, time.time() - t)
+        % (len(pcd_data['points']), filepath, time.time() - t)
     )
 
     return {'FINISHED'}
