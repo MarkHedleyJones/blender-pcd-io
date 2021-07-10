@@ -183,3 +183,15 @@ def import_pcd(context, filepath):
     )
 
     return {'FINISHED'}
+
+
+if __name__ == "__main__":
+    """For testing interactively inside Blender. For testing outside Blender, run pytest under ./test"""
+    import bpy
+    import os
+
+    pointcloud = 'xyz_binary_compressed.pcd'
+    path_dev_repo = './repos/blender-pcd-io'  # Adjust for your environment!
+    path_pointcloud = os.path.join(path_dev_repo, 'test/pointclouds', pointcloud)
+
+    import_pcd(bpy.context, path_pointcloud)
