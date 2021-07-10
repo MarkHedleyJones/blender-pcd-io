@@ -4,16 +4,13 @@ FIELDS x y z
 SIZE 4 4 4
 TYPE F F F
 COUNT 1 1 1
-WIDTH 8
+WIDTH 5
 HEIGHT 1
 VIEWPOINT 0 0 0 1 0 0 0
-POINTS 8
+POINTS 5
 DATA ascii
-1 1 1
-1 1 -1
-1 -1 1
-1 -1 -1
--1 1 1
--1 1 -1
--1 -1 1
+-2 -2 -2
 -1 -1 -1
+0 0 0
+1 1 1
+2 2 2
