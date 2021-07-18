@@ -100,6 +100,71 @@ def get_struct_format_chars(header):
     return ''.join(struct_formatting)
 
 
+def lzf_decompress(compressed, expected_length):
+    """This decompression function was copied from:
+    https://programtalk.com/python-examples/lzf.decompress
+    which is under an MIT License
+    """
+
+    HAS_PYTHON_LZF = False
+    try:
+        import lzf
+
+        HAS_PYTHON_LZF = True
+    except ModuleNotFoundError as e:
+        print(
+            "This PCD file is compressed but the compression library"
+            "(python-lzf) is not installed on your system. The PCD addon"
+            "contains a pure Python implementation for lzf-decompression but"
+            "please note that performance will be limited."
+            "To improve performance please install python-lzf for Python ",
+            f"{sys.version_info}. For example, by running: ",
+            "pip install python-lzf",
+        )
+
+    if HAS_PYTHON_LZF:
+        return lzf.decompress(compressed, expected_length)
+    else:
+        in_stream = bytearray(compressed)
+        in_len = len(in_stream)
+        in_index = 0
+        out_stream = bytearray()
+        out_index = 0
+
+        while in_index < in_len:
+            ctrl = in_stream[in_index]
+            if not isinstance(ctrl, int):
+                raise Exception(
+                    'lzf_decompress',
+                    'ctrl should be a number %s for key %s' % (str(ctrl), self._key),
+                )
+            in_index = in_index + 1
+            if ctrl < 32:
+                for x in range(0, ctrl + 1):
+                    out_stream.append(in_stream[in_index])
+                    in_index = in_index + 1
+                    out_index = out_index + 1
+            else:
+                length = ctrl >> 5
+                if length == 7:
+                    length = length + in_stream[in_index]
+                    in_index = in_index + 1
+
+                ref = out_index - ((ctrl & 0x1F) << 8) - in_stream[in_index] - 1
+                in_index = in_index + 1
+                for x in range(0, length + 2):
+                    out_stream.append(out_stream[ref])
+                    ref = ref + 1
+                    out_index = out_index + 1
+        if len(out_stream) != expected_length:
+            raise Exception(
+                'lzf_decompress',
+                'Expected lengths do not match %d != %d for key %s'
+                % (len(out_stream), expected_length, self._key),
+            )
+        return bytes(out_stream)
+
+
 def load_pcd_file(filepath):
     """Load the file and return a dictionary like:
     {"points": [(1.0, 1.0, 1.0), ...], "fields": ['x', 'y', 'z']}"""
@@ -109,21 +174,11 @@ def load_pcd_file(filepath):
         point_bytes = sum(header['SIZE'])
         points = []
         if header['DATA'] == 'binary_compressed':
-            try:
-                import lzf
-            except ModuleNotFoundError as e:
-                py_version = sys.version_info
-                return (
-                    "This PCD file is compressed but the decompressor "
-                    "library is not installed on your system. Please install "
-                    f"python-lzf for Python {py_version.major}. "
-                    "For example, by running: pip install python-lzf"
-                )
             # Two unsigned-ints at beginning of data block hold the sizes
             # (in bytes) of the compressed and uncompressed point data.
             len_compressed, len_decompressed = struct.unpack('II', f.read(8))
             # Data is organised as: [x0, x1, x2, y0, y1, y2, z0, z1, z2, ...]
-            data = lzf.decompress(f.read(len_compressed), len_decompressed)
+            data = lzf_decompress(f.read(len_compressed), len_decompressed)
             # Unzipped will be organised like so (convenient for zipping):
             # [[x0, x1, x2, ...], [y0, y1, y2, ...], [z0, z1, z2, ...], ...]
             unzipped = []
