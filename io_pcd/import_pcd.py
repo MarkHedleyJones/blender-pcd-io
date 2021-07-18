@@ -110,21 +110,31 @@ def lzf_decompress(compressed, expected_length):
     try:
         import lzf
 
-        HAS_PYTHON_LZF = True
+        if "decompress" in dir(lzf):
+            HAS_PYTHON_LZF = True
+        else:
+            print(
+                "WARNING: An incompatible compression library (lzf) is",
+                "installed on your system, which conflicts with the target",
+                "compression library (python-lzf). Please remove this library",
+                "if blender cannot detect your installation of python-lzf.",
+            )
     except ModuleNotFoundError as e:
         print(
-            "This PCD file is compressed but the compression library"
-            "(python-lzf) is not installed on your system. The PCD addon"
-            "contains a pure Python implementation for lzf-decompression but"
-            "please note that performance will be limited."
-            "To improve performance please install python-lzf for Python ",
-            f"{sys.version_info}. For example, by running: ",
-            "pip install python-lzf",
+            "WARNING: This PCD file is compressed, but the target compression",
+            "library (python-lzf) is not installed.",
         )
 
     if HAS_PYTHON_LZF:
         return lzf.decompress(compressed, expected_length)
     else:
+        print(
+            "NOTICE: Importing PCD using a pure Python implementation for",
+            "lzf-decompression. Please note that performance will be limited.",
+            "To improve performance please install python-lzf for Python",
+            f"{sys.version_info[0]}. For example, by running: ",
+            "pip install python-lzf",
+        )
         in_stream = bytearray(compressed)
         in_len = len(in_stream)
         in_index = 0
