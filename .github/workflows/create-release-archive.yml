@@ -1,4 +1,4 @@
-name: Create Archive
+name: Create Release Archive
 on:
   push:
     tags:

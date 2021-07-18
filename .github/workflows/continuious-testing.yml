@@ -1,0 +1,21 @@
+name: Continuious Testing
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest python-lzf
+    - name: Test
+      run: cd test && pytest

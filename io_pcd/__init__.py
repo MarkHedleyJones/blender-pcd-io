@@ -18,12 +18,7 @@
 
 # <pep8-80 compliant>
 
-from bpy.props import (
-    StringProperty,
-    BoolProperty,
-    EnumProperty,
-    FloatProperty,
-)
+from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.types import Operator
 import bpy
@@ -31,7 +26,7 @@ import bpy
 bl_info = {
     "name": "Point Cloud Format (.pcd)",
     "author": "Mark Hedley Jones",
-    "version": (1, 1),
+    "version": (1, 2),
     "blender": (2, 80, 0),
     "location": "File > Import/Export > PCD (.pcd)",
     "description": "Import/Export PCD files",
@@ -42,6 +37,7 @@ bl_info = {
 
 if "bpy" in locals():
     import importlib
+
     if "import_pcd" in locals():
         importlib.reload(import_pcd)
     if "export_pcd" in locals():
@@ -50,6 +46,7 @@ if "bpy" in locals():
 
 class ImportPCD(Operator, ImportHelper):
     """Import a PCD file"""
+
     bl_idname = "import_scene.import_pcd"
     bl_label = "Import PCD file"
 
@@ -63,11 +60,13 @@ class ImportPCD(Operator, ImportHelper):
 
     def execute(self, context):
         from . import import_pcd
+
         return import_pcd.import_pcd(context, self.filepath)
 
 
 class ExportPCD(Operator, ExportHelper):
     """Export a PCD file"""
+
     bl_idname = "export.export_pcd"
     bl_label = "Export pcd file"
 
@@ -81,17 +80,16 @@ class ExportPCD(Operator, ExportHelper):
 
     def execute(self, context):
         from . import export_pcd
+
         return export_pcd.export_pcd(context, self.filepath)
 
 
 def menu_func_import(self, context):
-    self.layout.operator(ImportPCD.bl_idname,
-                         text="Point Cloud Data (.pcd)")
+    self.layout.operator(ImportPCD.bl_idname, text="Point Cloud Data (.pcd)")
 
 
 def menu_func_export(self, context):
-    self.layout.operator(ExportPCD.bl_idname,
-                         text="Point Cloud Data (.pcd)")
+    self.layout.operator(ExportPCD.bl_idname, text="Point Cloud Data (.pcd)")
 
 
 def register():
