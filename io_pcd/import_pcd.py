@@ -20,6 +20,7 @@
 
 """ This script is an importer for the .pcd files"""
 
+import enum
 import os
 import struct
 import sys
@@ -37,6 +38,12 @@ header = {
     'POINTS': None,
     'DATA': None,
 }
+
+
+class CompressonLib(enum.Enum):
+    AUTO = 0
+    FORCE_INTERNAL = -1
+    FORCE_EXTERNAL = 1
 
 
 def validated_header(header):
@@ -100,30 +107,41 @@ def get_struct_format_chars(header):
     return ''.join(struct_formatting)
 
 
-def lzf_decompress(compressed, expected_length):
+def lzf_decompress(compressed, expected_length, lzf_library=CompressonLib.AUTO):
     """This decompression function was copied from:
     https://programtalk.com/python-examples/lzf.decompress
     which is under an MIT License
     """
 
-    HAS_PYTHON_LZF = False
-    try:
+    if lzf_library == CompressonLib.FORCE_INTERNAL:
+        # Force to use internal implementation
+        HAS_PYTHON_LZF = False
+    elif lzf_library == CompressonLib.FORCE_EXTERNAL:
+        # Force to use python-lzf
         import lzf
 
-        if "decompress" in dir(lzf):
-            HAS_PYTHON_LZF = True
-        else:
+        HAS_PYTHON_LZF = True
+    else:
+        # Autodetect presence of python-lzf
+        HAS_PYTHON_LZF = False
+        try:
+            import lzf
+
+            if "decompress" in dir(lzf):
+                HAS_PYTHON_LZF = True
+            else:
+                print(
+                    "WARNING: An incompatible compression library (lzf) is",
+                    "installed on your system, which conflicts with the target",
+                    "compression library (python-lzf). Please remove this",
+                    "library if blender cannot detect your installation of",
+                    " python-lzf.",
+                )
+        except ModuleNotFoundError as e:
             print(
-                "WARNING: An incompatible compression library (lzf) is",
-                "installed on your system, which conflicts with the target",
-                "compression library (python-lzf). Please remove this library",
-                "if blender cannot detect your installation of python-lzf.",
+                "WARNING: This PCD file is compressed, but the target",
+                "compression library (python-lzf) is not installed.",
             )
-    except ModuleNotFoundError as e:
-        print(
-            "WARNING: This PCD file is compressed, but the target compression",
-            "library (python-lzf) is not installed.",
-        )
 
     if HAS_PYTHON_LZF:
         return lzf.decompress(compressed, expected_length)
@@ -175,7 +193,7 @@ def lzf_decompress(compressed, expected_length):
         return bytes(out_stream)
 
 
-def load_pcd_file(filepath):
+def load_pcd_file(filepath, lzf_library=CompressonLib.AUTO):
     """Load the file and return a dictionary like:
     {"points": [(1.0, 1.0, 1.0), ...], "fields": ['x', 'y', 'z']}"""
     with open(filepath, 'rb') as f:
@@ -188,7 +206,7 @@ def load_pcd_file(filepath):
             # (in bytes) of the compressed and uncompressed point data.
             len_compressed, len_decompressed = struct.unpack('II', f.read(8))
             # Data is organised as: [x0, x1, x2, y0, y1, y2, z0, z1, z2, ...]
-            data = lzf_decompress(f.read(len_compressed), len_decompressed)
+            data = lzf_decompress(f.read(len_compressed), len_decompressed, lzf_library)
             # Unzipped will be organised like so (convenient for zipping):
             # [[x0, x1, x2, ...], [y0, y1, y2, ...], [z0, z1, z2, ...], ...]
             unzipped = []

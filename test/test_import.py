@@ -48,21 +48,35 @@ def get_expected_points():
     ]
 
 
+def check_points(points):
+    expected_points = get_expected_points()
+    assert len(expected_points) == len(points)
+    for index in range(len(points)):
+        assert points[index] == expected_points[index]
+
+
+def check_pcd_data(pcd_data):
+    check_points(pcd_data_to_points(pcd_data))
+
+
 def test_xyz_binary():
     path_pcd = os.path.join(path_pointclouds, 'xyz_binary.pcd')
-    pcd_data = import_pcd.load_pcd_file(path_pcd)
-    points = pcd_data_to_points(pcd_data)
-    expected_points = get_expected_points()
-    assert len(expected_points) == len(points)
-    for index in range(len(points)):
-        assert points[index] == expected_points[index]
+    check_pcd_data(import_pcd.load_pcd_file(path_pcd))
 
 
-def test_xyz_binary_compressed():
+def test_xyz_binary_compressed_internal_lzf_decompression():
     path_pcd = os.path.join(path_pointclouds, 'xyz_binary_compressed.pcd')
-    pcd_data = import_pcd.load_pcd_file(path_pcd)
-    points = pcd_data_to_points(pcd_data)
-    expected_points = get_expected_points()
-    assert len(expected_points) == len(points)
-    for index in range(len(points)):
-        assert points[index] == expected_points[index]
+    check_pcd_data(
+        import_pcd.load_pcd_file(
+            path_pcd, lzf_library=import_pcd.CompressonLib.FORCE_INTERNAL
+        )
+    )
+
+
+def test_xyz_binary_compressed_external_lzf_decompression():
+    path_pcd = os.path.join(path_pointclouds, 'xyz_binary_compressed.pcd')
+    check_pcd_data(
+        import_pcd.load_pcd_file(
+            path_pcd, lzf_library=import_pcd.CompressonLib.FORCE_EXTERNAL
+        )
+    )
