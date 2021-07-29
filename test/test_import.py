@@ -59,6 +59,11 @@ def check_pcd_data(pcd_data):
     check_points(pcd_data_to_points(pcd_data))
 
 
+def test_xyz_ascii():
+    path_pcd = os.path.join(path_pointclouds, 'xyz_ascii.pcd')
+    check_pcd_data(import_pcd.load_pcd_file(path_pcd))
+
+
 def test_xyz_binary():
     path_pcd = os.path.join(path_pointclouds, 'xyz_binary.pcd')
     check_pcd_data(import_pcd.load_pcd_file(path_pcd))
