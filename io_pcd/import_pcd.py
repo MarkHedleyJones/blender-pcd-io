@@ -62,7 +62,7 @@ def validated_header(header):
     }
     header = {key: transformers[key](header[key]) for key in header}
     assert header['WIDTH'] * header['HEIGHT'] == header['POINTS']
-    assert header['DATA'] in ['binary', 'binary_compressed']
+    assert header['DATA'] in ['ascii', 'binary', 'binary_compressed']
     assert len(header['FIELDS']) == len(header['SIZE'])
     assert len(header['FIELDS']) == len(header['TYPE'])
     assert len(header['FIELDS']) == len(header['COUNT'])
@@ -200,7 +200,7 @@ def load_pcd_file(filepath, lzf_library=CompressonLib.AUTO):
         header = read_header(f)
         struct_format = get_struct_format_chars(header)
         point_bytes = sum(header['SIZE'])
-        points = []
+        points = None
         if header['DATA'] == 'binary_compressed':
             # Two unsigned-ints at beginning of data block hold the sizes
             # (in bytes) of the compressed and uncompressed point data.
@@ -221,15 +221,18 @@ def load_pcd_file(filepath, lzf_library=CompressonLib.AUTO):
                 chunk_start = field_idx * blk_fmt_num_bytes
                 chunk_end = chunk_start + blk_fmt_num_bytes
                 unzipped.append(struct.unpack(blk_fmt, data[chunk_start:chunk_end]))
-            return {'points': list(zip(*unzipped)), 'fields': header['FIELDS']}
-        else:
-            return {
-                'points': [
-                    (struct.unpack(struct_format, f.read(point_bytes)))
-                    for x in range(header['POINTS'])
-                ],
-                'fields': header['FIELDS'],
-            }
+            points = list(zip(*unzipped))
+
+        elif header['DATA'] == 'binary':
+            points = [
+                (struct.unpack(struct_format, f.read(point_bytes)))
+                for x in range(header['POINTS'])
+            ]
+
+        elif header['DATA'] == 'ascii':
+            points = [list(map(float, row.decode().rstrip().split(' '))) for row in f]
+
+        return {'points': points, 'fields': header['FIELDS']}
 
 
 def convert_points_to_mesh_verticies(pcd_data, pcd_name):

@@ -85,3 +85,6 @@ def test_xyz_binary_compressed_external_lzf_decompression():
             path_pcd, lzf_library=import_pcd.CompressonLib.FORCE_EXTERNAL
         )
     )
+
+
+test_xyz_ascii()
