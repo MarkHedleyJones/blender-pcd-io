@@ -71,20 +71,13 @@ def test_xyz_binary():
 
 def test_xyz_binary_compressed_internal_lzf_decompression():
     path_pcd = os.path.join(path_pointclouds, 'xyz_binary_compressed.pcd')
-    check_pcd_data(
-        import_pcd.load_pcd_file(
-            path_pcd, lzf_library=import_pcd.CompressonLib.FORCE_INTERNAL
-        )
-    )
+    import_pcd.lzf_library = import_pcd.CompressonLib.FORCE_INTERNAL
+    check_pcd_data(import_pcd.load_pcd_file(path_pcd))
+    import_pcd.lzf_library = import_pcd.CompressonLib.AUTO
 
 
 def test_xyz_binary_compressed_external_lzf_decompression():
     path_pcd = os.path.join(path_pointclouds, 'xyz_binary_compressed.pcd')
-    check_pcd_data(
-        import_pcd.load_pcd_file(
-            path_pcd, lzf_library=import_pcd.CompressonLib.FORCE_EXTERNAL
-        )
-    )
-
-
-test_xyz_ascii()
+    import_pcd.lzf_library = import_pcd.CompressonLib.FORCE_EXTERNAL
+    check_pcd_data(import_pcd.load_pcd_file(path_pcd))
+    import_pcd.lzf_library = import_pcd.CompressonLib.AUTO

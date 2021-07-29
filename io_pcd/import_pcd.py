@@ -46,6 +46,9 @@ class CompressonLib(enum.Enum):
     FORCE_EXTERNAL = 1
 
 
+lzf_library = CompressonLib.AUTO
+
+
 def validated_header(header):
     assert None not in header.values()
     transformers = {
@@ -144,8 +147,10 @@ def lzf_decompress(compressed, expected_length, lzf_library=CompressonLib.AUTO):
             )
 
     if HAS_PYTHON_LZF:
+        print("using external library")
         return lzf.decompress(compressed, expected_length)
     else:
+        print("using internal library")
         print(
             "NOTICE: Importing PCD using a pure Python implementation for",
             "lzf-decompression. Please note that performance will be limited.",
@@ -193,45 +198,51 @@ def lzf_decompress(compressed, expected_length, lzf_library=CompressonLib.AUTO):
         return bytes(out_stream)
 
 
-def load_pcd_file(filepath, lzf_library=CompressonLib.AUTO):
+def parse_ascii_points(file, header, struct_format):
+    return [list(map(float, row.decode().rstrip().split(' '))) for row in file]
+
+
+def parse_binary_points(file, header, struct_format):
+    bytes_per_point = sum(header['SIZE'])
+    return [
+        (struct.unpack(struct_format, file.read(bytes_per_point)))
+        for x in range(header['POINTS'])
+    ]
+
+
+def parse_binary_compressed_points(file, header, struct_format):
+    # Two unsigned-ints at beginning of data block hold the sizes
+    # (in bytes) of the compressed and uncompressed point data.
+    len_compressed, len_decompressed = struct.unpack('II', file.read(8))
+    # Data is organised as: [x0, x1, x2, y0, y1, y2, z0, z1, z2, ...]
+    data = lzf_decompress(file.read(len_compressed), len_decompressed, lzf_library)
+    # Unzipped will be organised like so (convenient for zipping):
+    # [[x0, x1, x2, ...], [y0, y1, y2, ...], [z0, z1, z2, ...], ...]
+    unzipped = []
+    for field_idx in range(len(header['FIELDS'])):
+        # E.g if points are float type (f) and there are 5 points in total
+        # then the 'x' field block_format will be: 'fffff'
+        blk_fmt = ''.join(struct_format[field_idx] for x in range(header['POINTS']))
+        # Figure out how big this block would be in bytes
+        blk_fmt_num_bytes = struct.calcsize(blk_fmt)
+        chunk_start = field_idx * blk_fmt_num_bytes
+        chunk_end = chunk_start + blk_fmt_num_bytes
+        unzipped.append(struct.unpack(blk_fmt, data[chunk_start:chunk_end]))
+    return list(zip(*unzipped))
+
+
+def load_pcd_file(filepath):
     """Load the file and return a dictionary like:
     {"points": [(1.0, 1.0, 1.0), ...], "fields": ['x', 'y', 'z']}"""
-    with open(filepath, 'rb') as f:
-        header = read_header(f)
+    with open(filepath, 'rb') as file:
+        header = read_header(file)
         struct_format = get_struct_format_chars(header)
-        point_bytes = sum(header['SIZE'])
-        points = None
-        if header['DATA'] == 'binary_compressed':
-            # Two unsigned-ints at beginning of data block hold the sizes
-            # (in bytes) of the compressed and uncompressed point data.
-            len_compressed, len_decompressed = struct.unpack('II', f.read(8))
-            # Data is organised as: [x0, x1, x2, y0, y1, y2, z0, z1, z2, ...]
-            data = lzf_decompress(f.read(len_compressed), len_decompressed, lzf_library)
-            # Unzipped will be organised like so (convenient for zipping):
-            # [[x0, x1, x2, ...], [y0, y1, y2, ...], [z0, z1, z2, ...], ...]
-            unzipped = []
-            for field_idx in range(len(header['FIELDS'])):
-                # E.g if points are float type (f) and there are 5 points in total
-                # then the 'x' field block_format will be: 'fffff'
-                blk_fmt = ''.join(
-                    struct_format[field_idx] for x in range(header['POINTS'])
-                )
-                # Figure out how big this block would be in bytes
-                blk_fmt_num_bytes = struct.calcsize(blk_fmt)
-                chunk_start = field_idx * blk_fmt_num_bytes
-                chunk_end = chunk_start + blk_fmt_num_bytes
-                unzipped.append(struct.unpack(blk_fmt, data[chunk_start:chunk_end]))
-            points = list(zip(*unzipped))
-
-        elif header['DATA'] == 'binary':
-            points = [
-                (struct.unpack(struct_format, f.read(point_bytes)))
-                for x in range(header['POINTS'])
-            ]
-
-        elif header['DATA'] == 'ascii':
-            points = [list(map(float, row.decode().rstrip().split(' '))) for row in f]
-
+        parsers = {
+            'ascii': parse_ascii_points,
+            'binary': parse_binary_points,
+            'binary_compressed': parse_binary_compressed_points,
+        }
+        points = parsers[header['DATA']](file, header, struct_format)
         return {'points': points, 'fields': header['FIELDS']}
 
 
