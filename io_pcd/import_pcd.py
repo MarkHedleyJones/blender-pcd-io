@@ -147,10 +147,8 @@ def lzf_decompress(compressed, expected_length, lzf_library=CompressonLib.AUTO):
             )
 
     if HAS_PYTHON_LZF:
-        print("using external library")
         return lzf.decompress(compressed, expected_length)
     else:
-        print("using internal library")
         print(
             "NOTICE: Importing PCD using a pure Python implementation for",
             "lzf-decompression. Please note that performance will be limited.",
