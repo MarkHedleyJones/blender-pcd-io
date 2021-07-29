@@ -1,6 +1,15 @@
 # blender-pcd-io
 
-Add-on for importing and exporting PCD files from [Blender](https://www.blender.org/) 2.8+
+Add-on for importing and exporting PCD files from [Blender](https://www.blender.org/) 2.8+.
+### Features:
+* No external dependencies. Although, `python-lzf` will be used, if installed, when importing compressed pointclouds.
+* Point-clouds are editable using Blender's standard modelling tools.
+* Supports importing of PCD files in *ascii*, *binary*, and *binary_compressed* formats.
+
+### Missing Features:
+* No support for coloured point-clouds (due to use of Blender mesh verticies).
+* No support for labelled point-clouds.
+* Exports PCD files as *binary* encoded, and currently has no option to select other export formats.
 
 <p align="center">
   <img src="https://github.com/MarkHedleyJones/blender-pcd-io/raw/master/media/screenshot.png"/>
