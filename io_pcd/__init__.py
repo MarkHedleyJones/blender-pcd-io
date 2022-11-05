@@ -31,7 +31,7 @@ bl_info = {
     "doc_url": "",
     "location": "File > Import/Export > PCD (.pcd)",
     "name": "Point Cloud Format (.pcd)",
-    "version": (1, 3, 2),
+    "version": (1, 4, 0),
     "warning": "",
 }
 
