@@ -27,12 +27,12 @@ import struct
 
 def export_pcd(context, filepath):
     points = []
-    for cloud in [x for x in context.selected_objects if x.type == 'MESH']:
+    for cloud in [x for x in context.selected_objects if x.type == "MESH"]:
         points += [(cloud.matrix_world @ v.co) for v in cloud.data.vertices]
 
     num_points = len(points)
 
-    with open(filepath, 'wb') as f:
+    with open(filepath, "wb") as f:
         f.write("# .PCD v0.7 - Point Cloud Data file format\n".encode())
         f.write("VERSION 0.7\n".encode())
         f.write("FIELDS x y z\n".encode())
@@ -45,6 +45,6 @@ def export_pcd(context, filepath):
         f.write("POINTS {}\n".format(num_points).encode())
         f.write("DATA binary\n".encode())
         for point in points:
-            f.write(struct.pack('fff', point[0], point[1], point[2]))
+            f.write(struct.pack("fff", point[0], point[1], point[2]))
 
-    return {'FINISHED'}
+    return {"FINISHED"}
