@@ -18,7 +18,7 @@
 
 # <pep8-80 compliant>
 
-from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty
+from bpy.props import StringProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.types import Operator
 import bpy
