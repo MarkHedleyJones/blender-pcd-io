@@ -48,3 +48,8 @@ bpy.ops.import_mesh.pcd(filepath="/home/username/pointcloud_to_import.pcd")
 ```python
 bpy.ops.export_mesh.pcd(filepath="/home/username/output_pointcloud.pcd")
 ```
+
+### Tips:
+1. When exporting, ensure you have selected the items you wish to export. If no objects are selected in Blender, nothing will be exported and you may see an error.
+2. When exporting a pointcloud after making edits, make sure to exit the *Edit Mode* context (e.g. return to *Object Mode* context) otherwise your changes may not be reflected in the output file.
+3. If you have trouble with paths not being found when importing/exporting, try using an *absolute path* and without path expansion. For example: `/home/username/thing.pcd`, rather than `~/thing.pcd`.
