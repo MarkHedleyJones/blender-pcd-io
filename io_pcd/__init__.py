@@ -47,7 +47,7 @@ if "bpy" in locals():
 class ImportPCD(Operator, ImportHelper):
     """Import a PCD file"""
 
-    bl_idname = "import_scene.import_pcd"
+    bl_idname = "import_mesh.pcd"
     bl_label = "Import PCD file"
 
     filename_ext = ".pcd"
@@ -67,7 +67,7 @@ class ImportPCD(Operator, ImportHelper):
 class ExportPCD(Operator, ExportHelper):
     """Export a PCD file"""
 
-    bl_idname = "export.export_pcd"
+    bl_idname = "export_mesh.pcd"
     bl_label = "Export pcd file"
 
     filename_ext = ".pcd"
