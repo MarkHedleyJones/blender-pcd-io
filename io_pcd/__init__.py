@@ -18,21 +18,21 @@
 
 # <pep8-80 compliant>
 
-from bpy.props import StringProperty, BoolProperty, EnumProperty, FloatProperty
+from bpy.props import StringProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.types import Operator
 import bpy
 
 bl_info = {
-    "name": "Point Cloud Format (.pcd)",
     "author": "Mark Hedley Jones",
-    "version": (1, 3),
     "blender": (2, 80, 0),
-    "location": "File > Import/Export > PCD (.pcd)",
-    "description": "Import/Export PCD files",
-    "warning": "",
-    "doc_url": "",
     "category": "Import-Export",
+    "description": "Import/Export PCD files",
+    "doc_url": "",
+    "location": "File > Import/Export > PCD (.pcd)",
+    "name": "Point Cloud Format (.pcd)",
+    "version": (1, 3, 2),
+    "warning": "",
 }
 
 if "bpy" in locals():
