@@ -52,7 +52,7 @@ class ImportPCD(Operator, ImportHelper):
 
     filename_ext = ".pcd"
 
-    filter_glob: StringProperty(default="*.pcd", options={'HIDDEN'})
+    filter_glob: StringProperty(default="*.pcd", options={"HIDDEN"})
 
     @classmethod
     def poll(cls, context):
@@ -72,11 +72,11 @@ class ExportPCD(Operator, ExportHelper):
 
     filename_ext = ".pcd"
 
-    filter_glob: StringProperty(default="*.pcd", options={'HIDDEN'})
+    filter_glob: StringProperty(default="*.pcd", options={"HIDDEN"})
 
     @classmethod
     def poll(cls, context):
-        return 'MESH' in [x.type for x in context.selected_objects]
+        return "MESH" in [x.type for x in context.selected_objects]
 
     def execute(self, context):
         from . import export_pcd
