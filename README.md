@@ -19,7 +19,7 @@ Add-on for importing and exporting PCD files from [Blender](https://www.blender.
 Download the latest zip archive (pcd-io.zip) from the [releases page](https://github.com/MarkHedleyJones/blender-pcd-io/releases).
 
 Open Blender and navigate to:
-  
+
   Edit -> Preferences -> Add-ons -> Install
 
 When prompted select the zip file `pcd-io.zip`.
@@ -29,4 +29,27 @@ Afterwards you will see a screen like in the following image.
 
 <img src="https://github.com/MarkHedleyJones/blender-pcd-io/raw/master/media/screenshot-enable-addon.png"/>
 
+## Usage
+After installing this plugin, there are two ways to import and export PCD files.
 
+### 1. Import/Export from the user interface
+You can import and export PCD files from the File menu (shown in first screenshot):
+
+>  *File -> Import -> Point Cloud Data (.pcd)*
+
+  >*File -> Export -> Point Cloud Data (.pcd)*
+
+### 2. Import/Export programatically
+You can also import and export PCD files programatically. For example:
+
+```python
+bpy.ops.import_mesh.pcd(filepath="/home/username/pointcloud_to_import.pcd")
+```
+```python
+bpy.ops.export_mesh.pcd(filepath="/home/username/output_pointcloud.pcd")
+```
+
+### Tips:
+1. When exporting, ensure you have selected the items you wish to export. If no objects are selected in Blender, nothing will be exported and you may see an error.
+2. When exporting a pointcloud after making edits, make sure to exit the *Edit Mode* context (e.g. return to *Object Mode* context) otherwise your changes may not be reflected in the output file.
+3. If you have trouble with paths not being found when importing/exporting, try using an *absolute path* and without path expansion. For example: `/home/username/thing.pcd`, rather than `~/thing.pcd`.
