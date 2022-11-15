@@ -18,10 +18,11 @@
 
 # <pep8-80 compliant>
 
-from bpy.props import StringProperty
+from bpy.props import StringProperty, CollectionProperty
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.types import Operator
 import bpy
+import os
 
 bl_info = {
     "author": "Mark Hedley Jones",
@@ -52,6 +53,14 @@ class ImportPCD(Operator, ImportHelper):
 
     filename_ext = ".pcd"
 
+    files: CollectionProperty(
+        name="File Path",
+        description="File path used for importing the PCD file",
+        type=bpy.types.OperatorFileListElement,
+    )
+
+    directory: StringProperty()
+
     filter_glob: StringProperty(default="*.pcd", options={"HIDDEN"})
 
     @classmethod
@@ -61,7 +70,20 @@ class ImportPCD(Operator, ImportHelper):
     def execute(self, context):
         from . import import_pcd
 
-        return import_pcd.import_pcd(context, self.filepath)
+        paths = [
+            os.path.join(self.directory, name.name)
+            for name in self.files
+        ]
+
+        if not paths:
+            paths.append(self.filepath)
+
+        for path in paths:
+            import_pcd.import_pcd(context, path)
+
+        context.window.cursor_set('DEFAULT')
+
+        return {'FINISHED'}
 
 
 class ExportPCD(Operator, ExportHelper):
