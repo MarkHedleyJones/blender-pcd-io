@@ -76,16 +76,19 @@ def validated_header(header):
     return header
 
 
-def read_header(file_descriptor):
+def read_header(binary_file):
     def first(arr):
         return arr[0], arr[1:]
 
-    def front(arr):
-        return arr[:-1], arr[-1]
+    def convert_text(binary_line):
+        text_line = binary_line.decode("utf-8")
+        # Clean line-endings from binary data
+        clean_line_ending = text_line.rstrip("\n\r")
+        return clean_line_ending.rstrip()
 
-    for line in file_descriptor:
-        row, _ = front(line.decode("utf-8"))
-        head, tail = first(row.split(" "))
+    for binary_line in binary_file:
+        line = convert_text(binary_line)
+        head, tail = first(line.split(" "))
         if head in header:
             header[head] = " ".join(tail)
         if head == "DATA":
