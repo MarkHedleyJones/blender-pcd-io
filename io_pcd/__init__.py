@@ -32,7 +32,7 @@ bl_info = {
     "doc_url": "",
     "location": "File > Import/Export > PCD (.pcd)",
     "name": "Point Cloud Format (.pcd)",
-    "version": (1, 5, 0),
+    "version": (1, 5, 1),
     "warning": "",
 }
 
@@ -70,10 +70,7 @@ class ImportPCD(Operator, ImportHelper):
     def execute(self, context):
         from . import import_pcd
 
-        paths = [
-            os.path.join(self.directory, name.name)
-            for name in self.files
-        ]
+        paths = [os.path.join(self.directory, name.name) for name in self.files]
 
         if not paths:
             paths.append(self.filepath)
@@ -81,9 +78,9 @@ class ImportPCD(Operator, ImportHelper):
         for path in paths:
             import_pcd.import_pcd(context, path)
 
-        context.window.cursor_set('DEFAULT')
+        context.window.cursor_set("DEFAULT")
 
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class ExportPCD(Operator, ExportHelper):
