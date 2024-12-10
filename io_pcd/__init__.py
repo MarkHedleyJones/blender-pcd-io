@@ -32,7 +32,7 @@ bl_info = {
     "description": "Import and export Point Cloud Data (PCD) files as editible objects",
     "doc_url": "https://github.com/MarkHedleyJones/blender-pcd-io",
     "location": "File > Import/Export > Point Cloud Data (.pcd)",
-    "name": "Point Cloud Data (.pcd)",
+    "name": "Point Cloud Data (PCD) format",
     "version": (1, 5, 2),
     "warning": "",
 }
