@@ -18,21 +18,22 @@
 
 # <pep8-80 compliant>
 
-from bpy.props import StringProperty, CollectionProperty
-from bpy_extras.io_utils import ImportHelper, ExportHelper
-from bpy.types import Operator
-import bpy
 import os
+
+import bpy
+from bpy.props import CollectionProperty, StringProperty
+from bpy.types import Operator
+from bpy_extras.io_utils import ExportHelper, ImportHelper
 
 bl_info = {
     "author": "Mark Hedley Jones",
     "blender": (2, 80, 0),
     "category": "Import-Export",
-    "description": "Import/Export PCD files",
-    "doc_url": "",
-    "location": "File > Import/Export > PCD (.pcd)",
-    "name": "Point Cloud Format (.pcd)",
-    "version": (1, 5, 1),
+    "description": "Import and export Point Cloud Data (PCD) files as editible objects",
+    "doc_url": "https://github.com/MarkHedleyJones/blender-pcd-io",
+    "location": "File > Import/Export > Point Cloud Data (.pcd)",
+    "name": "Point Cloud Data (PCD) format",
+    "version": (1, 5, 2),
     "warning": "",
 }
 
