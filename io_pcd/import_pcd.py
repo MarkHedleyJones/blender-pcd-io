@@ -22,6 +22,7 @@
 
 import enum
 import os
+import math
 import struct
 import sys
 import time
@@ -100,13 +101,16 @@ def get_struct_format_chars(header):
     """Convert the field types/sizes into format specifiers for the
     struct package"""
     struct_formats = {
+        # Integer: signed-char, signed-short, signed-long, signed-long long
         "I": ["b", "h", "l", "q"],
+        # Unsigned-Integer: unsigned-char, unsigned-short, unsigned-long, unsigned-long long
         "U": ["B", "H", "I", "Q"],
+        # float: pad byte, float 16, float 32, double (float 64)
         "F": ["x", "e", "f", "d"],
     }
     struct_formatting = []
     for field_type, field_size in zip(header["TYPE"], header["SIZE"]):
-        field_size_index = int(field_size**0.5)
+        field_size_index = int(math.log2(field_size))
         struct_formatting.append(struct_formats[field_type][field_size_index])
     # Check that a 1 byte float hasn't been specified!
     assert "x" not in struct_formatting
